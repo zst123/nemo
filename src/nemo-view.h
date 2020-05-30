@@ -301,6 +301,10 @@ struct NemoViewClass {
 	void	(* click_to_rename_mode_changed)   (NemoView *view);
 	void	(* sort_directories_first_changed) (NemoView *view);
 
+	/* Preview selection event for nemo-preview */
+	void	(* preview_selection_event)     (NemoView *view,
+											 GtkDirectionType direction);
+
 	/* Get the id string for this view. Its a constant string, not memory managed */
 	const char *   (* get_view_id)            (NemoView          *view);
 
@@ -348,6 +352,8 @@ void                nemo_view_activate_file (NemoView *view,
 void                nemo_view_preview_files                    (NemoView        *view,
 								    GList               *files,
 								    GArray              *locations);
+void                nemo_view_preview_selection_event    (NemoView      *view,
+                                                                GtkDirectionType    direction);
 void                nemo_view_start_batching_selection_changes (NemoView  *view);
 void                nemo_view_stop_batching_selection_changes  (NemoView  *view);
 void                nemo_view_notify_selection_changed         (NemoView  *view);

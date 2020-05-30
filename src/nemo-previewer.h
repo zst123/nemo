@@ -24,6 +24,7 @@
 #ifndef __NEMO_PREVIEWER_H__
 #define __NEMO_PREVIEWER_H__
 
+#include <gio/gio.h>
 #include <glib-object.h>
 
 G_BEGIN_DECLS
@@ -61,6 +62,10 @@ void nemo_previewer_call_show_file (NemoPreviewer *previewer,
                                         guint xid,
 					gboolean close_if_already_visible);
 void nemo_previewer_call_close (NemoPreviewer *previewer);
+
+guint nemo_previewer_connect_selection_event (GDBusConnection *connection);
+void  nemo_previewer_disconnect_selection_event (GDBusConnection *connection,
+                                                     guint            event_id);
 
 G_END_DECLS
 

@@ -2644,6 +2644,32 @@ keyboard_space (NemoIconContainer *container,
 	}
 }
 
+void
+nemo_icon_container_preview_selection_event (NemoIconContainer *container,
+                                             GtkDirectionType direction)
+{
+	GdkEventKey event;
+    if (direction == GTK_DIR_UP)
+    {
+        keyboard_up (container, &event);
+    }
+    else if (direction == GTK_DIR_DOWN)
+    {
+        keyboard_down (container, &event);
+    }
+    else if (direction == GTK_DIR_LEFT)
+    {
+        keyboard_left (container, &event);
+    }
+    else if (direction == GTK_DIR_RIGHT)
+    {
+        keyboard_right (container, &event);
+    }
+
+    /* Preview the new item */
+    preview_selected_items (container);
+}
+
 /* look for the first icon that matches the longest part of a given
  * search pattern
  */

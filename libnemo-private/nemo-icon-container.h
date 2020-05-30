@@ -304,6 +304,9 @@ void              nemo_icon_container_set_highlighted_for_clipboard (NemoIconCon
 void              nemo_icon_container_unselect_all                  (NemoIconContainer  *view);
 void              nemo_icon_container_select_all                    (NemoIconContainer  *view);
 
+/* nemo preview */
+void              nemo_icon_container_preview_selection_event (NemoIconContainer *container,
+                                                               GtkDirectionType direction);
 
 /* operations on the selection */
 void              nemo_icon_container_update_selection              (NemoIconContainer *container);

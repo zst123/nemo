@@ -23,6 +23,10 @@
 
 #include "nemo-previewer.h"
 
+#include "nemo-view.h"
+#include "nemo-window.h"
+#include "nemo-window-slot.h"
+
 #define DEBUG_FLAG NEMO_DEBUG_PREVIEWER
 #include <libnemo-private/nemo-debug.h>
 
@@ -30,14 +34,16 @@
 
 G_DEFINE_TYPE (NemoPreviewer, nemo_previewer, G_TYPE_OBJECT);
 
-#define PREVIEWER_DBUS_NAME "org.nemo.Preview"
-#define PREVIEWER_DBUS_IFACE "org.nemo.Preview"
-#define PREVIEWER_DBUS_PATH "/org/nemo/Preview"
+#define PREVIEWER_DBUS_NAME "org.gnome.NautilusPreviewer"
+#define PREVIEWER_DBUS_IFACE "org.gnome.NautilusPreviewer"
+#define PREVIEWER_DBUS_EVENT "org.gnome.NautilusPreviewer2"
+#define PREVIEWER_DBUS_PATH "/org/gnome/NautilusPreviewer"
 
 static NemoPreviewer *singleton = NULL;
 
 struct _NemoPreviewerPriv {
   GDBusConnection *connection;
+  guint previewer_selection_id;
 };
 
 static void
@@ -171,6 +177,17 @@ nemo_previewer_call_show_file (NemoPreviewer *self,
                           NULL,
                           previewer_show_file_ready_cb,
                           g_object_ref (self));
+
+  /* Disconnect any existing Nemo Preview */
+  if (self->priv->previewer_selection_id != 0)
+  {
+    nemo_previewer_disconnect_selection_event (self->priv->connection,
+                                               self->priv->previewer_selection_id);
+    self->priv->previewer_selection_id = 0;
+  }
+
+  /* Connect to new Nemo Preview */
+  self->priv->previewer_selection_id = nemo_previewer_connect_selection_event (self->priv->connection);
 }
 
 void
@@ -194,4 +211,76 @@ nemo_previewer_call_close (NemoPreviewer *self)
                           NULL,
                           previewer_close_ready_cb,
                           g_object_ref (self));
+
+  /* Disconnect Nemo Preview */
+  if (self->priv->previewer_selection_id != 0)
+  {
+    nemo_previewer_disconnect_selection_event (self->priv->connection,
+                                               self->priv->previewer_selection_id);
+    self->priv->previewer_selection_id = 0;
+  }
+}
+
+static void
+previewer_selection_event (GDBusConnection *connection,
+                           const gchar     *sender_name,
+                           const gchar     *object_path,
+                           const gchar     *interface_name,
+                           const gchar     *signal_name,
+                           GVariant        *parameters,
+                           gpointer         user_data)
+{
+    GApplication *application = g_application_get_default ();
+    GList *l, *windows = gtk_application_get_windows (GTK_APPLICATION (application));
+    NemoWindow *window = NULL;
+    NemoWindowSlot *slot;
+    NemoView *view;
+    GtkDirectionType direction;
+
+    for (l = windows; l != NULL; l = l->next)
+    {
+        if (NEMO_IS_WINDOW (l->data))
+        {
+            window = l->data;
+            break;
+        }
+    }
+
+    if (window == NULL)
+    {
+        return;
+    }
+
+    slot = nemo_window_get_active_slot (window);
+    view = nemo_window_slot_get_current_view (slot);
+
+    if (!NEMO_IS_VIEW (view))
+    {
+        return;
+    }
+
+    g_variant_get (parameters, "(u)", &direction);
+    nemo_view_preview_selection_event (NEMO_VIEW (view), direction);
+}
+
+guint
+nemo_previewer_connect_selection_event (GDBusConnection *connection)
+{
+    return g_dbus_connection_signal_subscribe (connection,
+                                               PREVIEWER_DBUS_NAME,
+                                               PREVIEWER_DBUS_EVENT,
+                                               "SelectionEvent",
+                                               PREVIEWER_DBUS_PATH,
+                                               NULL,
+                                               G_DBUS_SIGNAL_FLAGS_NONE,
+                                               previewer_selection_event,
+                                               NULL,
+                                               NULL);
+}
+
+void
+nemo_previewer_disconnect_selection_event (GDBusConnection *connection,
+                                               guint            event_id)
+{
+    g_dbus_connection_signal_unsubscribe (connection, event_id);
 }

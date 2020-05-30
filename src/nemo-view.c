@@ -1178,6 +1178,13 @@ nemo_view_preview_files (NemoView *view,
 }
 
 void
+nemo_view_preview_selection_event (NemoView *view,
+                                             GtkDirectionType   direction)
+{
+    NEMO_VIEW_CLASS (G_OBJECT_GET_CLASS (view))->preview_selection_event (view, direction);
+}
+
+void
 nemo_view_activate_files (NemoView *view,
 			      GList *files,
 			      NemoWindowOpenFlags flags,

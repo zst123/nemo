@@ -285,6 +285,18 @@ nemo_desktop_icon_grid_view_file_changed (NemoView *view, NemoFile *file, NemoDi
 }
 
 static void
+nemo_desktop_icon_grid_view_preview_selection_event (NemoView *view,
+                                        GtkDirectionType   direction)
+{
+    NemoIconView *icon_view;
+    NemoIconContainer *icon_container;
+    icon_view = NEMO_ICON_VIEW (view);
+    icon_container = get_icon_container (icon_view);
+    nemo_icon_container_preview_selection_event (icon_container,
+                                                 direction);
+}
+
+static void
 unrealized_callback (GtkWidget *widget, NemoDesktopIconGridView *desktop_icon_grid_view)
 {
   g_return_if_fail (desktop_icon_grid_view->details->root_window != NULL);
@@ -373,6 +385,7 @@ nemo_desktop_icon_grid_view_class_init (NemoDesktopIconGridViewClass *class)
     vclass->add_file = nemo_desktop_icon_grid_view_add_file;
     vclass->file_changed = nemo_desktop_icon_grid_view_file_changed;
     vclass->remove_file = nemo_desktop_icon_grid_view_remove_file;
+    vclass->preview_selection_event = nemo_desktop_icon_grid_view_preview_selection_event;
 
 #if GTK_CHECK_VERSION(3, 21, 0)
 	GtkWidgetClass *wclass = GTK_WIDGET_CLASS (class);

@@ -4025,6 +4025,69 @@ nemo_list_view_get_id (NemoView *view)
 }
 
 static void
+nemo_list_view_preview_selection_event (NemoView *view,
+                                        GtkDirectionType   direction)
+{
+    NemoListView *list_view;
+    GtkTreeView *tree_view;
+    GtkTreeSelection *selection;
+    GList *list;
+    GtkTreeIter iter;
+    GtkTreePath *path;
+    GtkTreeModel *tree_model;
+    gboolean moved;
+
+    /* We only support up and down movements for the list view */
+    if (direction != GTK_DIR_UP && direction != GTK_DIR_DOWN)
+    {
+        return;
+    }
+
+    g_assert (NEMO_IS_LIST_VIEW (view));
+    list_view = NEMO_LIST_VIEW (view);
+    tree_view = list_view->details->tree_view;
+    selection = gtk_tree_view_get_selection (tree_view);
+    list = gtk_tree_selection_get_selected_rows (selection, &tree_model);
+
+    if (list == NULL)
+    {
+        return;
+    }
+
+    /* Advance the first selected item, since that's what we use for
+     * the previewer */
+    path = list->data;
+    moved = FALSE;
+    if (gtk_tree_model_get_iter (tree_model, &iter, path))
+    {
+        if (direction == GTK_DIR_UP)
+        {
+            moved = gtk_tree_model_iter_previous (tree_model, &iter);
+        }
+        else
+        {
+            moved = gtk_tree_model_iter_next (tree_model, &iter);
+        }
+    }
+
+    if (moved)
+    {
+        g_signal_handlers_block_by_func (selection, list_selection_changed_callback, view);
+
+        gtk_tree_selection_unselect_all (selection);
+        gtk_tree_selection_select_iter (selection, &iter);
+
+        g_signal_handlers_unblock_by_func (selection, list_selection_changed_callback, view);
+        nemo_view_notify_selection_changed (view);
+    }
+
+    g_list_free_full (list, (GDestroyNotify) gtk_tree_path_free);
+
+    /* Preview the new item */
+    preview_selected_items (NEMO_LIST_VIEW (view));
+}
+
+static void
 nemo_list_view_class_init (NemoListViewClass *class)
 {
 	NemoViewClass *nemo_view_class;
@@ -4072,6 +4135,7 @@ nemo_list_view_class_init (NemoListViewClass *class)
 	nemo_view_class->get_first_visible_file = nemo_list_view_get_first_visible_file;
 	nemo_view_class->scroll_to_file = list_view_scroll_to_file;
     nemo_view_class->click_to_rename_mode_changed = nemo_list_view_click_to_rename_mode_changed;
+    nemo_view_class->preview_selection_event = nemo_list_view_preview_selection_event;
 }
 
 static void

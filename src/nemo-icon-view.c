@@ -2557,6 +2557,15 @@ nemo_icon_view_set_property (GObject         *object,
 }
 
 static void
+real_preview_selection_event (NemoIconView *icon_view,
+                              GtkDirectionType direction)
+{
+    nemo_icon_container_preview_selection_event (get_icon_container (icon_view),
+                                                 direction);
+}
+
+
+static void
 nemo_icon_view_finalize (GObject *object)
 {
 	NemoIconView *icon_view;
@@ -2726,6 +2735,7 @@ nemo_icon_view_class_init (NemoIconViewClass *klass)
 	nemo_view_class->get_view_id = nemo_icon_view_get_id;
 	nemo_view_class->get_first_visible_file = icon_view_get_first_visible_file;
 	nemo_view_class->scroll_to_file = icon_view_scroll_to_file;
+	nemo_view_class->preview_selection_event = real_preview_selection_event;
 
 	properties[PROP_COMPACT] =
 		g_param_spec_boolean ("compact",
