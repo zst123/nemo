@@ -2648,6 +2648,18 @@ void
 nemo_icon_container_preview_selection_event (NemoIconContainer *container,
                                              GtkDirectionType direction)
 {
+	GList *file_list;
+	gchar *uri_before;
+	gchar *uri_after;
+
+	/* Check uri before changing */
+	file_list = nemo_icon_container_get_selection (container);
+	if (file_list != NULL && NEMO_IS_FILE (file_list->data))
+	{
+		uri_before = nemo_file_get_uri (file_list->data);
+		nemo_file_list_free (file_list);
+	}
+
 	GdkEventKey event;
     if (direction == GTK_DIR_UP)
     {
@@ -2666,8 +2678,18 @@ nemo_icon_container_preview_selection_event (NemoIconContainer *container,
         keyboard_right (container, &event);
     }
 
-    /* Preview the new item */
-    preview_selected_items (container);
+    /* Preview the new item if uri has changed */
+    file_list = nemo_icon_container_get_selection (container);
+	if (file_list != NULL && NEMO_IS_FILE (file_list->data))
+	{
+		uri_after = nemo_file_get_uri (file_list->data);
+		nemo_file_list_free (file_list);
+	}
+
+    if (g_strcmp0 (uri_before, uri_after) != 0)
+    {
+    	preview_selected_items (container);
+    }
 }
 
 /* look for the first icon that matches the longest part of a given

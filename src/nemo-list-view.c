@@ -4036,6 +4036,17 @@ nemo_list_view_preview_selection_event (NemoView *view,
     GtkTreePath *path;
     GtkTreeModel *tree_model;
     gboolean moved;
+	GList *file_list;
+	gchar *uri_before;
+	gchar *uri_after;
+
+	/* Check uri before changing */
+	file_list = nemo_list_view_get_selection (NEMO_LIST_VIEW (view));
+	if (file_list != NULL)
+	{
+		uri_before = nemo_file_get_uri (file_list->data);
+		nemo_file_list_free (file_list);
+	}
 
     /* We only support up and down movements for the list view */
     if (direction != GTK_DIR_UP && direction != GTK_DIR_DOWN)
@@ -4083,8 +4094,18 @@ nemo_list_view_preview_selection_event (NemoView *view,
 
     g_list_free_full (list, (GDestroyNotify) gtk_tree_path_free);
 
-    /* Preview the new item */
-    preview_selected_items (NEMO_LIST_VIEW (view));
+    /* Preview the new item if uri has changed */
+    file_list = nemo_list_view_get_selection (NEMO_LIST_VIEW (view));
+	if (file_list != NULL)
+	{
+		uri_after = nemo_file_get_uri (file_list->data);
+		nemo_file_list_free (file_list);
+	}
+
+    if (g_strcmp0 (uri_before, uri_after) != 0)
+    {
+    	preview_selected_items (NEMO_LIST_VIEW (view));
+    }
 }
 
 static void
